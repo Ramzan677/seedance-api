@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<input id="prompt" placeholder="Enter prompt">
+<button onclick="gen()">Generate</button>
+
+<video id="v" controls></video>
+<pre id="res"></pre>
+
+<script>
+function gen() {
+  fetch("/api/generate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      prompt: document.getElementById("prompt").value,
+      model: "Seedance 1.5 Pro",
+      duration: 4,
+      resolution: "720p",
+      aspect_ratio: "16:9"
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    document.getElementById("res").innerText = JSON.stringify(d, null, 2);
+
+    if (d.success) {
+      document.getElementById("v").src = d.data.video_url;
+    }
+  });
+}
+</script>
+
+</body>
+</html>
