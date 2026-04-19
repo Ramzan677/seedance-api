@@ -1,23 +1,24 @@
-const axios = require('axios');
+const https = require('https');
 
 export default async function handler(req, res) {
-    // 1. Setup CORS
+    // 1. Setup Headers for Browser/CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Content-Type', 'application/json');
 
     if (req.method === 'OPTIONS') return res.status(200).end();
 
-    // 2. Get Data
+    // 2. Get Data from URL (GET) or Body (POST)
     const data = req.method === 'POST' ? req.body : req.query;
 
-    // 3. Strict Parameter Mapping
+    // 3. Set Variables (Exact match to your documentation)
     const model = data.model || "Seedance 1.5 Pro";
     const prompt = data.prompt || "A dramatic sunrise over mountains, camera slowly rising";
-    const resolution = data.res || data.resolution || "720p";
     const aspect_ratio = data.ratio || data.aspect_ratio || "16:9";
+    const resolution = data.res || data.resolution || "720p";
     
-    // Convert duration to Number and validate based on your rules
+    // Duration Validation logic
     let duration = parseInt(data.duration);
     if (model === "Seedance 1.5 Pro") {
         if (![4, 8, 12].includes(duration)) duration = 8;
@@ -25,57 +26,61 @@ export default async function handler(req, res) {
         if (![5, 10].includes(duration)) duration = 5;
     }
 
-    // 4. Build Payload Exactly like the Documentation
-    const payload = {
+    // 4. Build Exact JSON Payload
+    const payload = JSON.stringify({
         "prompt": String(prompt),
         "model": String(model),
         "duration": Number(duration),
         "resolution": String(resolution),
-        "aspect_ratio": String(aspect_ratio)
+        "aspect_ratio": String(aspect_ratio),
+        ...(data.image || data.image_url ? { "image_url": String(data.image || data.image_url) } : {})
+    });
+
+    // 5. Send Request using Native HTTPS (More stable on Vercel)
+    const options = {
+        hostname: 'zecora0.serv00.net',
+        path: '/ai/Seedance.php',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(payload),
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        },
+        timeout: 50000 // 50 seconds
     };
 
-    // Only add image_url if it actually exists (Don't send null)
-    const image = data.image || data.image_url;
-    if (image && image.trim() !== "") {
-        payload.image_url = String(image);
-    }
+    const request = https.request(options, (response) => {
+        let responseData = '';
+        response.on('data', (chunk) => { responseData += chunk; });
+        response.on('end', () => {
+            try {
+                const result = JSON.parse(responseData);
+                
+                // Add your credit
+                result.developer = "Developed by Ramzan Ahsan";
 
-    try {
-        // 5. POST to Seedance with strict headers
-        const response = await axios({
-            method: 'post',
-            url: "https://zecora0.serv00.net/ai/Seedance.php",
-            data: payload,
-            headers: { 
-                "Content-Type": "application/json",
-                "User-Agent": "Mozilla/5.0" // Some servers block requests without a User-Agent
-            },
-            timeout: 55000 // Vercel timeout is roughly 60s, so we stop at 55s
+                // Direct Redirect Feature
+                if (data.direct && result.success && result.data && result.data.video_url) {
+                    res.writeHead(302, { Location: result.data.video_url });
+                    return res.end();
+                }
+
+                res.status(200).json(result);
+            } catch (e) {
+                res.status(500).json({ 
+                    success: false, 
+                    error: "Seedance Server returned non-JSON response",
+                    raw: responseData,
+                    developer: "Developed by Ramzan Ahsan"
+                });
+            }
         });
+    });
 
-        const result = response.data;
-        
-        // Add your branding
-        if (result) {
-            result.developer = "Developed by Ramzan Ahsan";
-        }
+    request.on('error', (error) => {
+        res.status(500).json({ success: false, error: error.message });
+    });
 
-        // 6. Handle Direct Play
-        if (data.direct && result.success && result.data && result.data.video_url) {
-            return res.redirect(302, result.data.video_url);
-        }
-
-        return res.status(200).json(result);
-
-    } catch (error) {
-        // Log error for Vercel console
-        console.error("Seedance Error:", error.response?.data || error.message);
-        
-        return res.status(500).json({ 
-            success: false, 
-            error: "Failed to communicate with Seedance",
-            message: error.response?.data?.error || error.message,
-            developer: "Developed by Ramzan Ahsan"
-        });
-    }
+    request.write(payload);
+    request.end();
 }
