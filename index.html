@@ -1,38 +1,160 @@
 <!DOCTYPE html>
-<html>
-<body>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seedance AI - Developed by Ramzan Ahsan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0b0f1a; color: #e2e8f0; }
+        .glass { background: rgba(23, 32, 53, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .glow-button { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); transition: all 0.2s ease; }
+        .glow-button:hover:not(:disabled) { box-shadow: 0 0 20px rgba(124, 58, 237, 0.4); transform: translateY(-1px); }
+        .glow-button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .loader { width: 24px; height: 24px; border: 3px solid #334155; border-top-color: #818cf8; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        select, textarea { background: #1a2236 !important; border-color: #2d3748 !important; color: white !important; }
+        .log-entry { border-left: 2px solid #334155; padding-left: 8px; margin-bottom: 4px; }
+    </style>
+</head>
+<body class="min-h-screen p-4">
+    <div class="max-w-5xl mx-auto">
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl font-extrabold text-white tracking-tight">Seedance <span class="text-indigo-400">Pro</span></h1>
+                <p class="text-slate-500 text-xs mt-1">Developed by <span class="text-indigo-300 font-semibold">Ramzan Ahsan</span></p>
+            </div>
+            <div class="flex gap-2">
+                <div class="px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-[10px] text-indigo-400 font-bold uppercase tracking-widest">
+                    Vercel Edge Powered
+                </div>
+            </div>
+        </div>
 
-<input id="prompt" placeholder="Enter prompt">
-<button onclick="gen()">Generate</button>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-4 space-y-4">
+                <div class="glass p-5 rounded-2xl">
+                    <label class="text-xs font-bold text-slate-400 uppercase mb-2 block">Visual Prompt</label>
+                    <textarea id="prompt" rows="4" class="w-full rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="A long cinematic sunset over mountains..."></textarea>
+                    
+                    <div class="grid grid-cols-2 gap-3 mt-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Model</label>
+                            <select id="model" class="w-full mt-1 p-2 rounded-lg text-xs outline-none" onchange="updateDurationOptions()">
+                                <option value="Seedance 1.5 Pro">Seedance 1.5 Pro</option>
+                                <option value="Seedance 1.0 Pro">Seedance 1.0 Pro</option>
+                                <option value="Seedance 1.0 Lite">Seedance 1.0 Lite</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Duration</label>
+                            <select id="duration" class="w-full mt-1 p-2 rounded-lg text-xs outline-none"></select>
+                        </div>
+                    </div>
 
-<video id="v" controls></video>
-<pre id="res"></pre>
+                    <button id="genBtn" onclick="handleGenerate()" class="w-full mt-6 py-3 rounded-xl font-bold text-white glow-button flex items-center justify-center gap-3">
+                        <span id="btnText">Generate Video</span>
+                    </button>
+                </div>
+                
+                <div class="glass p-4 rounded-xl">
+                    <h3 class="text-[10px] font-bold text-slate-500 uppercase mb-2">Internal Status</h3>
+                    <div id="logs" class="text-[10px] font-mono h-32 overflow-y-auto space-y-1 text-slate-400">
+                        <div class="log-entry">Interface initialized by Ramzan Ahsan.</div>
+                    </div>
+                </div>
+            </div>
 
-<script>
-function gen() {
-  fetch("/api/generate", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      prompt: document.getElementById("prompt").value,
-      model: "Seedance 1.5 Pro",
-      duration: 4,
-      resolution: "720p",
-      aspect_ratio: "16:9"
-    })
-  })
-  .then(r => r.json())
-  .then(d => {
-    document.getElementById("res").innerText = JSON.stringify(d, null, 2);
+            <div class="lg:col-span-8">
+                <div class="glass rounded-2xl h-full flex flex-col items-center justify-center relative overflow-hidden min-h-[500px]" id="preview-area">
+                    <div id="idle-view" class="text-center">
+                        <p class="text-sm text-slate-500">Video preview will appear here.</p>
+                    </div>
 
-    if (d.success) {
-      document.getElementById("v").src = d.data.video_url;
-    }
-  });
-}
-</script>
+                    <div id="loading-view" class="hidden flex flex-col items-center gap-4">
+                        <div class="loader"></div>
+                        <p class="text-indigo-400 font-medium">AI is rendering your video...</p>
+                    </div>
 
+                    <div id="success-view" class="hidden w-full h-full flex flex-col items-center">
+                        <video id="output-video" controls class="w-full h-full max-h-[440px] object-contain"></video>
+                        <div class="w-full p-4 bg-slate-900/50 backdrop-blur-md flex justify-between items-center">
+                            <p id="result-url" class="text-[10px] text-indigo-400 truncate max-w-xs font-mono"></p>
+                            <a id="download-btn" href="#" target="_blank" class="px-4 py-2 bg-indigo-600 rounded-lg text-[10px] font-bold text-white">Get Video</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-8 text-center text-slate-600 text-[10px] uppercase tracking-widest">
+            Developed by Ramzan Ahsan &bull; 2026
+        </footer>
+    </div>
+
+    <script>
+        function logger(msg) {
+            const logs = document.getElementById('logs');
+            const div = document.createElement('div');
+            div.className = "log-entry";
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            logs.prepend(div);
+        }
+
+        function updateDurationOptions() {
+            const model = document.getElementById('model').value;
+            const dur = document.getElementById('duration');
+            dur.innerHTML = '';
+            const opts = model === "Seedance 1.5 Pro" ? [4, 8, 12] : [5, 10];
+            opts.forEach(s => dur.add(new Option(`${s} Seconds`, s)));
+        }
+
+        async function handleGenerate() {
+            const btn = document.getElementById('genBtn');
+            const prompt = document.getElementById('prompt').value;
+            if (!prompt) return;
+
+            btn.disabled = true;
+            document.getElementById('idle-view').classList.add('hidden');
+            document.getElementById('loading-view').classList.remove('hidden');
+            document.getElementById('success-view').classList.add('hidden');
+            logger("Sending request to Vercel Serverless Function...");
+
+            const payload = {
+                prompt,
+                model: document.getElementById('model').value,
+                duration: parseInt(document.getElementById('duration').value),
+                resolution: "720p",
+                aspect_ratio: "16:9"
+            };
+
+            try {
+                // Notice: We call our local /api/generate instead of the full URL
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                const videoUrl = data.video_url || data.url || data.link;
+
+                if (videoUrl) {
+                    logger("Success! Video generated.");
+                    document.getElementById('output-video').src = videoUrl;
+                    document.getElementById('result-url').textContent = videoUrl;
+                    document.getElementById('download-btn').href = videoUrl;
+                    document.getElementById('loading-view').classList.add('hidden');
+                    document.getElementById('success-view').classList.remove('hidden');
+                }
+            } catch (err) {
+                logger("Error: " + err.message);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+        window.onload = updateDurationOptions;
+    </script>
 </body>
 </html>
