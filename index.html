@@ -6,106 +6,89 @@
     <title>Seedance Pro - Ramzan Ahsan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #0b0f1a; color: #e2e8f0; }
-        .glass { background: rgba(23, 32, 53, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .glow-button { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); transition: all 0.3s ease; }
-        .glow-button:hover:not(:disabled) { box-shadow: 0 0 25px rgba(139, 92, 246, 0.5); transform: translateY(-2px); }
-        .loader { width: 45px; height: 45px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #818cf8; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        select, textarea { background: #161e2e !important; border: 1px solid #2d3748 !important; color: white !important; padding: 10px; border-radius: 12px; outline: none; transition: border-color 0.2s; }
-        select:focus, textarea:focus { border-color: #6366f1; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0b0f1a; color: white; }
+        .glass { background: rgba(23, 32, 53, 0.8); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); }
+        .glow-btn { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); transition: 0.3s; }
+        .glow-btn:hover { box-shadow: 0 0 20px rgba(139, 92, 246, 0.5); transform: translateY(-2px); }
+        select, textarea { background: #161e2e !important; border: 1px solid #2d3748 !important; color: white !important; outline: none; }
     </style>
 </head>
-<body class="min-h-screen p-4 md:p-8 flex flex-col items-center">
+<body class="min-h-screen p-6 flex flex-col items-center">
+    
     <div class="max-w-5xl w-full">
-        <header class="mb-12 text-center">
-            <h1 class="text-5xl font-black text-white tracking-tight">Seedance <span class="text-indigo-400">PRO</span></h1>
-            <p class="text-slate-400 text-sm mt-3 font-medium uppercase tracking-widest">
-                Developed by <span class="text-indigo-300">Ramzan Ahsan</span>
-            </p>
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-black">Seedance <span class="text-indigo-400">PRO</span></h1>
+            <p class="text-slate-500 text-xs mt-2 uppercase tracking-widest">Developed by Ramzan Ahsan</p>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div class="lg:col-span-4 space-y-6">
-                <div class="glass p-6 rounded-[2rem] space-y-5">
+                <div class="glass p-6 rounded-3xl space-y-4">
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Video Prompt</label>
-                        <textarea id="prompt" rows="3" class="w-full mt-2 text-sm resize-none" placeholder="Enter cinematic description..."></textarea>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Model Selection</label>
+                        <select id="model" onchange="syncSettings()" class="w-full mt-1 p-3 rounded-xl text-xs">
+                            <option value="Seedance 1.5 Pro">Seedance 1.5 Pro</option>
+                            <option value="Seedance 1.0 Pro">Seedance 1.0 Pro</option>
+                            <option value="Seedance 1.0 Lite">Seedance 1.0 Lite</option>
+                        </select>
                     </div>
 
-                    <div class="space-y-4">
-                        <div class="flex flex-col">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">AI Model</label>
-                            <select id="model" class="mt-1 text-xs" onchange="updateDurationOptions()">
-                                <option value="Seedance 1.5 Pro">Seedance 1.5 Pro</option>
-                                <option value="Seedance 1.0 Pro">Seedance 1.0 Pro</option>
-                                <option value="Seedance 1.0 Lite">Seedance 1.0 Lite</option>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Visual Prompt</label>
+                        <textarea id="prompt" rows="3" class="w-full mt-1 p-3 rounded-xl text-sm" placeholder="A cinematic mountain sunset..."></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Ratio</label>
+                            <select id="ratio" class="w-full mt-1 p-2 rounded-lg text-xs">
+                                <option value="16:9">16:9</option>
+                                <option value="9:16">9:16</option>
+                                <option value="1:1">1:1</option>
+                                <option value="4:3">4:3</option>
+                                <option value="21:9">21:9</option>
                             </select>
                         </div>
-
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="flex flex-col">
-                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Aspect Ratio</label>
-                                <select id="ratio" class="mt-1 text-xs">
-                                    <option value="16:9">16:9 (Wide)</option>
-                                    <option value="9:16">9:16 (Portrait)</option>
-                                    <option value="1:1">1:1 (Square)</option>
-                                    <option value="4:3">4:3 (Standard)</option>
-                                    <option value="3:4">3:4 (Social)</option>
-                                    <option value="21:9">21:9 (Ultrawide)</option>
-                                </select>
-                            </div>
-                            <div class="flex flex-col">
-                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Duration</label>
-                                <select id="duration" class="mt-1 text-xs"></select>
-                            </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Resolution</label>
+                            <select id="resolution" class="w-full mt-1 p-2 rounded-lg text-xs">
+                                <option value="720p">720p</option>
+                                <option value="480p">480p</option>
+                            </select>
                         </div>
                     </div>
 
-                    <button id="genBtn" onclick="handleGenerate()" class="w-full py-4 rounded-2xl font-bold text-white glow-button text-sm">
-                        Create Video
-                    </button>
-
-                    <div id="audio-alert" class="text-[10px] text-center text-indigo-300 italic opacity-80"></div>
-                </div>
-
-                <div class="glass p-5 rounded-[1.5rem]">
-                    <h3 class="text-[10px] font-bold text-slate-500 uppercase mb-3">System Logs</h3>
-                    <div id="logs" class="text-[10px] font-mono h-24 overflow-y-auto text-slate-400 space-y-1">
-                        <div class="text-indigo-400">Ready. Created by Ramzan Ahsan.</div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Duration</label>
+                        <select id="duration" class="w-full mt-1 p-2 rounded-lg text-xs"></select>
                     </div>
+
+                    <button onclick="generate()" id="genBtn" class="w-full py-4 rounded-2xl font-bold glow-btn text-sm uppercase">Generate Video</button>
+                    <p id="audio-note" class="text-[9px] text-indigo-300 text-center italic"></p>
                 </div>
             </div>
 
             <div class="lg:col-span-8">
-                <div class="glass rounded-[2rem] h-full min-h-[450px] flex items-center justify-center p-8 relative overflow-hidden" id="render-box">
-                    <div id="idle-view" class="text-center opacity-40">
-                        <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                        <p class="text-sm font-medium">Render queue empty</p>
+                <div class="glass rounded-[2rem] min-h-[450px] flex flex-col items-center justify-center p-10 text-center">
+                    <div id="idle-view">
+                        <p class="text-slate-500 text-sm">System Ready for Render</p>
                     </div>
 
-                    <div id="loading-view" class="hidden flex flex-col items-center gap-6">
-                        <div class="loader"></div>
-                        <div class="text-center">
-                            <p class="text-indigo-400 font-bold text-lg animate-pulse">Rendering Video...</p>
-                            <p class="text-[10px] text-slate-500 mt-1 uppercase tracking-widest">Processing via Ramzan Ahsan API</p>
-                        </div>
+                    <div id="loading-view" class="hidden">
+                        <div class="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin mx-auto mb-4"></div>
+                        <p class="text-indigo-400 font-bold animate-pulse">AI is rendering your video...</p>
                     </div>
 
-                    <div id="success-view" class="hidden flex flex-col items-center w-full max-w-sm">
-                        <div class="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mb-6">
-                            <svg class="w-10 h-10 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                    <div id="success-view" class="hidden w-full">
+                        <div class="mb-8">
+                            <span class="px-4 py-1 bg-green-500/10 text-green-400 text-[10px] font-bold rounded-full border border-green-500/20">SUCCESS</span>
                         </div>
-                        <h2 class="text-xl font-bold text-white mb-2">Video Ready!</h2>
-                        <p class="text-xs text-slate-400 mb-8 text-center">Your cinematic creation has been processed successfully.</p>
-                        
-                        <a id="video-link-btn" href="#" target="_blank" class="w-full bg-white text-black hover:bg-indigo-50 font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-xl">
-                            <span>Open Video in New Tab</span>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                        <a id="video-link" href="#" target="_blank" class="inline-flex items-center gap-3 bg-white text-black font-black px-8 py-5 rounded-2xl hover:bg-slate-200 transition-all">
+                            OPEN VIDEO IN NEW TAB
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" stroke-width="2"/></svg>
                         </a>
-                        
-                        <p class="text-[10px] text-slate-600 mt-8 font-bold">DEVELOPED BY RAMZAN AHSAN</p>
+                        <p class="mt-10 text-[10px] text-slate-600 font-bold uppercase tracking-[0.3em]">Developer: Ramzan Ahsan</p>
                     </div>
                 </div>
             </div>
@@ -113,79 +96,64 @@
     </div>
 
     <script>
-        function log(msg) {
-            const logs = document.getElementById('logs');
-            const div = document.createElement('div');
-            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-            logs.prepend(div);
-        }
-
-        function updateDurationOptions() {
+        function syncSettings() {
             const model = document.getElementById('model').value;
             const dur = document.getElementById('duration');
-            const alert = document.getElementById('audio-alert');
+            const note = document.getElementById('audio-note');
             dur.innerHTML = '';
-            
+
             if (model === "Seedance 1.5 Pro") {
                 [4, 8, 12].forEach(s => dur.add(new Option(`${s} Seconds`, s)));
-                alert.textContent = "Audio: Supported for 4s & 8s only.";
+                note.textContent = "Audio: Supported on 4s & 8s. 12s is Video Only.";
             } else {
                 [5, 10].forEach(s => dur.add(new Option(`${s} Seconds`, s)));
-                alert.textContent = "Audio: Not supported for this model.";
+                note.textContent = "Audio: Not supported on this model.";
             }
         }
 
-        async function handleGenerate() {
-            const prompt = document.getElementById('prompt').value.trim();
+        async function generate() {
             const btn = document.getElementById('genBtn');
-            if (!prompt) return;
+            const prompt = document.getElementById('prompt').value;
+            if(!prompt) return alert("Please enter a prompt");
 
             btn.disabled = true;
-            btn.innerText = "Connecting...";
+            btn.innerText = "Processing...";
             document.getElementById('idle-view').classList.add('hidden');
             document.getElementById('success-view').classList.add('hidden');
             document.getElementById('loading-view').classList.remove('hidden');
-            
-            log(`Requesting ${document.getElementById('ratio').value} render...`);
 
-            const payload = {
+            const query = new URLSearchParams({
                 prompt: prompt,
                 model: document.getElementById('model').value,
-                duration: parseInt(document.getElementById('duration').value),
-                resolution: "720p",
-                aspect_ratio: document.getElementById('ratio').value
-            };
+                ratio: document.getElementById('ratio').value,
+                resolution: document.getElementById('resolution').value,
+                duration: document.getElementById('duration').value
+            });
 
             try {
-                const response = await fetch('/api/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+                const res = await fetch(`/api/generate?${query.toString()}`);
+                const data = await res.json();
+                
+                // Matches your screenshot structure: data.result.data.video_url
+                const url = data.result?.data?.video_url;
 
-                const data = await response.json();
-                const videoUrl = data.video_url || data.url || data.link || (data.data ? data.data.url : null);
-
-                if (videoUrl) {
-                    log("Render complete. Link generated.");
-                    document.getElementById('video-link-btn').href = videoUrl;
+                if (url) {
+                    document.getElementById('video-link').href = url;
                     document.getElementById('loading-view').classList.add('hidden');
                     document.getElementById('success-view').classList.remove('hidden');
                 } else {
-                    throw new Error("No URL found in API response");
+                    throw new Error("Provider server busy or error.");
                 }
             } catch (err) {
-                log("Error: " + err.message);
-                document.getElementById('idle-view').classList.remove('hidden');
+                alert("Error: " + err.message);
                 document.getElementById('loading-view').classList.add('hidden');
-                alert("Request failed. Check the logs.");
+                document.getElementById('idle-view').classList.remove('hidden');
             } finally {
                 btn.disabled = false;
-                btn.innerText = "Create Video";
+                btn.innerText = "Generate Video";
             }
         }
-
-        window.onload = updateDurationOptions;
+        window.onload = syncSettings;
     </script>
 </body>
 </html>
